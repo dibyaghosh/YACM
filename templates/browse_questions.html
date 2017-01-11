@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link rel="stylesheet"
+href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+crossorigin="anonymous" />
+<script src="//code.jquery.com/jquery-2.2.2.min.js"
+integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
+crossorigin="anonymous"></script>
+<link rel="stylesheet"
+href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link
+href='//fonts.googleapis.com/css?family=Work+Sans:300,400,700|Raleway:300,700' rel='stylesheet' type='text/css'>
+<link href="/css/style.css" rel="stylesheet" />
+</head>
+<body>
+{% if show_desc %}
+<a href="/questions/{{last_path}}" class="backbutton"> <i class="fa fa-arrow-left" aria-hidden="true"></i> Up One Level</a>
+
+{% else %}
+
+<a href="/" class="backbutton"> <i class="fa fa-arrow-left" aria-hidden="true"></i> Back to Home</a>
+
+{% endif %}
+
+<h1>{{title}}</h1>
+<h3 class="subtitle"> <small> {{description}} </small></h3>
+
+
+<div class="col-md-4">
+<!-- Create Category -->
+
+<p><a  href="#category_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-folder" aria-hidden="true"></i> Create a  
+New Category</a></p>
+
+<div id="category_form" class="center collapse">
+<form class="form-inline" action="/new" method="post">
+  <input type="hidden" name="type" value="category">
+  <input type="hidden" name="path" value="{{current_path}}">
+  <label class="sr-only" for="inlineFormInput">Name</label>
+  <input type="text" class="form-control" id="inlineFormInput" name="name" placeholder="Markov Chains">
+  <button type="submit" class="btn btn-primary">Create</button>
+</form>
+</div>
+
+<!-- Create Question -->
+
+<p><a  href="#question_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-file" aria-hidden="true"></i> Create a  
+New Question</a></p>
+
+<div id="question_form" class="center collapse">
+<form class="form-inline" action="/new" method="post">
+  <input type="hidden" name="type" value="question">
+  <input type="hidden" name="path" value="{{current_path}}">
+  <label class="sr-only" for="inlineFormInput">Name</label>
+  <input type="text" class="form-control" id="inlineFormInput" name="name" placeholder="Markov Chains">
+  <button type="submit" class="btn btn-primary">Create</button>
+</form>
+</div>
+
+{% if show_desc %}
+
+<p><a  href="#description_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-file" aria-hidden="true"></i> Update Description</a></p>
+
+<div id="description_form" class="center collapse">
+
+<form class="form-inline" action="/update_description{{current_path}}/" method="post">
+  <label class="sr-only" for="inlineFormInput">Name</label>
+  <input type="text" class="form-control" id="inlineFormInput" name="description" value="{{description}}">
+
+  <button type="submit" class="btn btn-primary">Update</button>
+</form>
+</div>
+{% endif %}
+</div>
+<section class="options col-md-8">
+<div class = "row">
+{% for folder in folders %}
+<div class="half col-md-6">
+<i class="half-icon fa fa-folder-o" aria-hidden="true"></i>
+<h2>{{folder[0]}}</h2>
+<p class="center">{{folder[1]}}
+</p>
+
+{% if show_desc %}
+  <a href="/questions/{{current_path}}/{{folder[0]}}" class="button" type="button">Browse</a>
+
+{% else %}
+
+  <a href="/questions/{{folder[0]}}" class="button" type="button">Browse</a>
+
+{% endif %}
+
+</div>
+{% endfor %}
+
+{% for nb in notebooks %}
+<div class="half col-md-6">
+<i class="half-icon fa fa-file-code-o" aria-hidden="true"></i>
+<h2>{{nb}}</h2>
+
+{% if show_desc %}
+  <a href="/edit/questions/{{current_path}}/{{nb}}" class="button" type="button">Edit</a>
+
+{% else %}
+
+  <a href="/edit/questions/{{nb}}" class="button" type="button">Edit</a>
+
+{% endif %}
+
+</div>
+{% endfor %}
+</div>
+</section>
+
+</body>
+
+
+</html>

@@ -1,0 +1,162 @@
+* {
+    font-family:'Work Sans';
+}
+
+h1 {
+    width:100%;
+    font-family:'Raleway';
+    text-transform:uppercase;
+    font-size:2em;
+    text-align:center;
+    font-weight:700;
+    padding:2em 0 0em 0;
+}
+
+
+
+.subtitle {
+    width:100%;
+    font-family:'Raleway';
+    text-transform:uppercase;
+    text-align:center;
+    font-weight:700;
+    padding:0em 0 1em 0;
+}
+h2 {
+    color:#666;
+    font-size:1.75em;
+    text-align:center;
+    padding:0.5em;
+    font-weight:700;
+    font-family:'Raleway';
+    text-transform:uppercase;
+}
+
+.half {
+    text-align:center;
+    padding:2em 5em;
+}
+
+.half + .half {
+    margin-left:-1px;
+    border-left:1px solid #eee;
+}
+
+.half-icon {
+    clear:both;
+    color:#666;
+    font-size:5em;
+}
+
+.backbutton {
+    color:#333;
+    padding:1em 2em;
+    display:inline-block;
+    margin:0.5em 0;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+.button {
+    color:#333;
+    border:2px solid #333;
+    padding:1em 2em;
+    display:inline-block;
+    margin:0.5em 0;
+}
+
+.dropdown-menu {
+  left: 50%;
+  right: auto;
+  text-align: center;
+  transform: translate(-50%, 0);
+}
+
+    .button:hover {
+        color:#FFF;
+        background-color:#333;
+        text-decoration:none;
+    }
+
+p {
+    width:100%;
+    text-align:center;
+}
+
+p span {
+    color:#999;
+}
+
+p.reversed {
+    color:#999;
+}
+
+p.reversed span {
+    color:#333;
+}
+
+.fa-refresh,.done-icon {
+    font-size: 3em;
+    margin: 2em 0 1em 0;
+}
+
+.progress-content h1,.done-content h1 {
+    padding:0;
+}
+
+.progress-content h1 + p,.done-content h1 + p {
+    margin:2em 0;
+}
+
+.banner {
+    width:100%;
+    background-color:#eee;
+    padding:1em 0;
+    color:333;
+}
+
+.server-input {
+    margin:3em 0 5em 0;
+}
+
+.server-field {
+    text-align:center;
+    width:100%;
+    font-size:1.5em;
+    padding:0.5em 1em;
+}
+
+.nbdisplay {
+    text-align: left !important;
+}
+
+.nbdisplay p{
+    text-align: left !important;
+}
+
+
+.center {
+    text-align: center;
+}
+
+.last_updated {
+        float:right;
+}
+
+.delete {
+        float:right;
+        color: #777;
+}
+
+
+.add_to {
+        color: #777;
+}
+
+
+
+.nb-search {
+        height: 5rem;
+        font-size: 2rem;
+}

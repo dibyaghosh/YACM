@@ -1,0 +1,67 @@
+
+<html>
+<head>
+<title>Course Materials Manager</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link rel="stylesheet"
+href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+crossorigin="anonymous" />
+<script src="//code.jquery.com/jquery-2.2.2.min.js"
+integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
+crossorigin="anonymous"></script>
+<link rel="stylesheet"
+href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link
+href='//fonts.googleapis.com/css?family=Work+Sans:300,400,700|Raleway:300,700' rel='stylesheet' type='text/css'>
+<link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+<a href="/" class="backbutton"> <i class="fa fa-arrow-left" aria-hidden="true"></i> Back </a>
+
+<h1>Browse HWs</h1>
+<div class="col-md-2">
+</div>
+
+</div>
+<section class="options col-md-8">
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>HW #</th>
+      <th>Name</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for hw in hws %}
+    <tr>
+      <th scope="row">{{hw[0]+1}}</th>
+      <td>{{hw[1]}}</td>
+      <td><a href="/edit/hw/{{hw[0]+1}}"> Edit </a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+</div>
+
+<p><a  href="#question_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-file" aria-hidden="true"></i> New Homework Assignment</a></p>
+
+<div id="question_form" class="center collapse">
+<form class="form-inline" action="/new" method="post">
+  <input type="hidden" name="type" value="hw">
+  <label class="sr-only" for="inlineFormInput">Name</label>
+  <input type="text" class="form-control" id="inlineFormInput" name="name" placeholder="Discrete Probability">
+  <button type="submit" class="btn btn-primary">Create</button>
+</form>
+</div>
+
+</section>
+
+</body>
+
+
+</html>

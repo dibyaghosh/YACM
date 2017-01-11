@@ -1,0 +1,6 @@
+jupyter
+nbformat
+nbconvert
+pypandoc
+flask
+nbopen

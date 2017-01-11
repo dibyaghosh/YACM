@@ -1,0 +1,157 @@
+
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript" async
+	src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link rel="stylesheet"
+href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+crossorigin="anonymous" />
+<script src="//code.jquery.com/jquery-2.2.2.min.js"
+integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
+crossorigin="anonymous"></script>
+<link rel="stylesheet"
+href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link
+href='//fonts.googleapis.com/css?family=Work+Sans:300,400,700|Raleway:300,700' rel='stylesheet' type='text/css'>
+<link href="/css/style.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5sortable/0.4.3/html.sortable.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.3.0/list.min.js"></script>
+f
+</head>
+<body>
+
+<a href="/hw" class="backbutton"> <i class="fa fa-arrow-left" aria-hidden="true"></i> Back to Browsing</a>
+
+
+<h1>{{title}}</h1>
+<div class="col-md-4">
+
+<p><a  href="/launch/hw/{{hw_num}}" class="button server-button"> <i class="fa fa-pencil" aria-hidden="true"></i> Open Preamble in 
+<span class="server-display">Jupyter</span></a></p>
+
+<p><a  href="#" class="button server-button"> <i class="fa fa-download" aria-hidden="true"></i> Download Generated
+Notebook</a></p>
+
+<p style="margin:5rem"></p>
+
+<div class="center" ><h4>Rearrange Questions  <span class="server-display"> (Drag and Drop)</span></h4></div>
+
+
+<ul id="sortt" class="list-group sortt">
+	 {% for nb in curr_files %}
+	<li class="list-group-item"><span class="nb_name"> {{nb[0]}} </span> 		 <span class="last_updated hidden">{{nb[1]}}</span>
+ <a class="delete"> <i class="fa fa-trash-o"></i></a></li>
+	 {% endfor %}
+
+</ul>
+
+<p><a  href="#nb_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-file" aria-hidden="true"></i> Add Questions</a></p>
+<p><a id="save_order" class="button server-button"> <i class="fa fa-file" aria-hidden="true"></i> Save Order</a></p>
+
+
+<div id="nb_form" class="collapse">
+
+
+<div id="hacker-list">
+
+	<input class="nb-search search" />
+	<a class="button sort" data-sort="nb_name">Sort by Name </a>
+	<a class="button sort" data-sort="last_updated">Sort by Last Modified</a>
+
+	<ul id="nb_names" class="list list-group">
+	 {% for nb in nb_files %}
+			<li class="list-group-item">
+			 <a class="add_to"> <i class="fa fa-plus-square-o"></i></a>
+		 <span class="nb_name">{{nb[0]}}</span>
+		 <span class="last_updated">{{nb[1]}}</span>
+	 </li>
+	 {% endfor %}
+	</ul
+></div>
+</div>
+
+<p style="margin:5rem"></p>
+<div class="center" ><h4> <span class="server-display"> Currently Viewing </span> {{status}} </h4></div>
+<p><a  href="/edit/questions/{{current_path}}" class="button server-button"> <i class="fa fa-eye" aria-hidden="true"></i> View
+<span class="server-display">Master</span> Notebook</a></p>
+
+<p><a  href="/student/questions/{{current_path}}" class="button server-button"> <i class="fa fa-eye" aria-hidden="true"></i> View
+<span class="server-display">Student</span> Notebook</a></p>
+
+<p><a  href="/solution/questions/{{current_path}}" class="button server-button"> <i class="fa fa-eye" aria-hidden="true"></i> View
+<span class="server-display">Solution</span> Notebook</a></p>
+
+</div>
+
+
+<section class="options col-md-8">
+<div class="nbdisplay">
+{{notebook | safe}}
+</div>
+</section>
+
+<script>
+
+
+
+$(document).ready(function(){
+	sortable(".sortt");
+	var options = {
+		valueNames: [ 'nb_name', 'last_updated' ]
+	};
+	var newNBList = new List('hacker-list', options);
+
+
+	$("#nb_names").delegate('.add_to','click', function(e)
+	{
+		correcto = $(this).parent()[0];
+		new_nb_name = $(correcto).find("span.nb_name").text();
+		last_updated = $(correcto).find("span.last_updated").text();
+		newNBList.remove('nb_name',new_nb_name);
+		$("#sortt").append('<li class="list-group-item"> <span class="nb_name">'+new_nb_name+'</span><span class="last_updated hidden">' + last_updated + '</span> <a class="delete"> <i class="fa fa-trash-o"></i></a></li>');
+			sortable(".sortt");
+	});
+
+	$("#sortt").delegate('.delete','click',function(e)
+	{
+			correcto = $(this).parent()[0];
+			console.log(correcto);
+			new_nb_name = $(correcto).find(".nb_name").text();
+			last_updated = $(correcto).find(".last_updated").text();
+
+			$(correcto).remove();
+			console.log(new_nb_name);
+			newNBList.add({'nb_name':new_nb_name,'last_updated': last_updated});
+			sortable(".sortt");
+	});
+
+	$("#save_order").click(function(e){
+		console.log("SAVING");
+		values = $('#sortt').find('.nb_name').map(function(){
+               return $.trim($(this).text());
+            }).get();
+		final_val = JSON.stringify(values);
+		$.post('/update/hw/{{hw_num}}',{order: final_val},function(data){location.reload();});
+
+	});
+
+	
+})
+
+</script>
+</body>
+
+
+</html>
