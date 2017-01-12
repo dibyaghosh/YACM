@@ -66,6 +66,15 @@ h2 {
     margin:0.5em 0;
 }
 
+
+.bview {
+    color:#333;
+    border:2px solid #333;
+    padding:1em 2em;
+    display:inline-block;
+    margin:0;
+}
+
 .dropdown-menu {
   left: 50%;
   right: auto;

@@ -38,11 +38,17 @@ f
 <h1>{{title}}</h1>
 <div class="col-md-4">
 
-<p><a  href="/launch/hw/{{hw_num}}" class="button server-button"> <i class="fa fa-pencil" aria-hidden="true"></i> Open Preamble in 
+<p><a  href="/launch/hw/{{hw_num}}" class="button server-button"> <i class="fa fa-pencil" aria-hidden="true"></i> Edit Preamble in 
 <span class="server-display">Jupyter</span></a></p>
 
-<p><a  href="#" class="button server-button"> <i class="fa fa-download" aria-hidden="true"></i> Download Generated
-Notebook</a></p>
+<p><a  href="#download_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-download" aria-hidden="true"></i> Download/Export</a></p>
+
+<div id="download_form" class="center collapse">
+<p><a  href="/download/hw/{{hw_num}}?show=student" class="button server-button"> Student Folder Zip</a></p>
+
+<p><a  href="/download/hw/{{hw_num}}?show=solution" class="button server-button"> Solution Notebook</a></p>
+</div>
+
 
 <p style="margin:5rem"></p>
 
@@ -83,15 +89,22 @@ Notebook</a></p>
 </div>
 
 <p style="margin:5rem"></p>
+
+<p style="margin:5rem"></p>
 <div class="center" ><h4> <span class="server-display"> Currently Viewing </span> {{status}} </h4></div>
-<p><a  href="/edit/questions/{{current_path}}" class="button server-button"> <i class="fa fa-eye" aria-hidden="true"></i> View
-<span class="server-display">Master</span> Notebook</a></p>
 
-<p><a  href="/student/questions/{{current_path}}" class="button server-button"> <i class="fa fa-eye" aria-hidden="true"></i> View
-<span class="server-display">Student</span> Notebook</a></p>
+<p><a  href="#category_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-eye" aria-hidden="true"></i> Change View</a></p>
 
-<p><a  href="/solution/questions/{{current_path}}" class="button server-button"> <i class="fa fa-eye" aria-hidden="true"></i> View
-<span class="server-display">Solution</span> Notebook</a></p>
+<div id="category_form" class="center collapse">
+<p><a  href="/edit/hw/{{hw_num}}?show=master" class="button server-button"> Master</a></p>
+
+<p><a  href="/edit/hw/{{hw_num}}?show=student" class="button server-button"> Student</a></p>
+
+<p><a  href="/edit/hw/{{hw_num}}?show=solution" class="button server-button"> Solution</a></p>
+</div>
+
+
+
 
 </div>
 
@@ -143,6 +156,7 @@ $(document).ready(function(){
                return $.trim($(this).text());
             }).get();
 		final_val = JSON.stringify(values);
+		alert(final_val)
 		$.post('/update/hw/{{hw_num}}',{order: final_val},function(data){location.reload();});
 
 	});

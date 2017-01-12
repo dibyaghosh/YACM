@@ -20,7 +20,7 @@ href='//fonts.googleapis.com/css?family=Work+Sans:300,400,700|Raleway:300,700' r
 <body>
 <a href="/" class="backbutton"> <i class="fa fa-arrow-left" aria-hidden="true"></i> Back </a>
 
-<h1>Browse HWs</h1>
+<h1>Browse {{file_type}}s</h1>
 <div class="col-md-2">
 </div>
 
@@ -30,7 +30,7 @@ href='//fonts.googleapis.com/css?family=Work+Sans:300,400,700|Raleway:300,700' r
 <table class="table">
   <thead>
     <tr>
-      <th>HW #</th>
+      <th>{{file_type}} #</th>
       <th>Name</th>
       <th></th>
     </tr>
@@ -40,7 +40,7 @@ href='//fonts.googleapis.com/css?family=Work+Sans:300,400,700|Raleway:300,700' r
     <tr>
       <th scope="row">{{hw[0]+1}}</th>
       <td>{{hw[1]}}</td>
-      <td><a href="/edit/hw/{{hw[0]+1}}"> Edit </a></td>
+      <td><a href="/edit/{{type_hidden}}/{{hw[0]+1}}"> Edit </a></td>
     </tr>
     {% endfor %}
   </tbody>
@@ -48,11 +48,11 @@ href='//fonts.googleapis.com/css?family=Work+Sans:300,400,700|Raleway:300,700' r
 
 </div>
 
-<p><a  href="#question_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-file" aria-hidden="true"></i> New Homework Assignment</a></p>
+<p><a  href="#question_form" data-toggle="collapse" class="button server-button"> <i class="fa fa-file" aria-hidden="true"></i> New {{file_verbose}}</a></p>
 
 <div id="question_form" class="center collapse">
 <form class="form-inline" action="/new" method="post">
-  <input type="hidden" name="type" value="hw">
+  <input type="hidden" name="type" value="{{type_hidden}}">
   <label class="sr-only" for="inlineFormInput">Name</label>
   <input type="text" class="form-control" id="inlineFormInput" name="name" placeholder="Discrete Probability">
   <button type="submit" class="btn btn-primary">Create</button>

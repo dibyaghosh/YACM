@@ -1,6 +1,6 @@
 import nbformat as nbf
 import sys
-import parseDocstring as docparse
+from . import parseDocstring as docparse
 import os
 
 def load_notebook(name):
@@ -86,13 +86,16 @@ def generate_solution(nb):
     nb.cells = [cell for cell in nb.cells if not isOK(cell)]
     return nb
 
-def generate_student(nb_orig):
+def generate_student(nb_orig,build_directory=None):
     nb = nb_orig.copy()
     fix_notebook(nb)
-    docparse.generateDoctests(nb,"",False)
+    if build_directory is None:
+        docparse.generateDoctests(nb)
+    else:
+        docparse.generateDoctests(nb,builddirectory=build_directory,to_file=True)
     return nb
 
-
+"""
 if __name__ == "__main__":
     fileToParse = sys.argv[-1]
     print("Attempting to read from : ", fileToParse+".ipynb")
@@ -114,3 +117,4 @@ if __name__ == "__main__":
     save_notebook(nb,"%s/student"%outputLocation)
     save_notebook(nb,"%s/grading/base"%outputLocation)
     print
+"""

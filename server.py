@@ -1,25 +1,40 @@
-from flask import Flask,request, send_from_directory,render_template,abort,redirect
+#!/usr/bin/env python3
+
+from flask import Flask,request, send_from_directory,render_template,abort,redirect,send_file
 import os
 import pypandoc
 import nbformat
 from nbconvert import MarkdownExporter
 import glob
-import parseNotebook as pN
-import parseDocstring as docparse
-from file_utils import FileMonitor
 import shutil
 import json
 from subprocess import Popen
 from os.path import join,normpath,exists
+import webbrowser
+import zipfile
+
+import server_utils.parseNotebook as pN
+from server_utils.file_utils import FileMonitor
+
 ######
 #
 # FLASK STARTUP
 #
 ######
 
+def create_app():
+    app = Flask(__name__,static_url_path='')
+    def run_on_start(*args, **argv):
+        url = "http://127.0.0.1:5000"
+        webbrowser.open(url,new=2)
+    run_on_start()
+    return app
+#app = create_app()
 app = Flask(__name__,static_url_path='')
 
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+
 
 
 ######
@@ -63,18 +78,20 @@ def send_js(path):
 ######
 @app.route('/')
 def index():
-	return open("index.html").read()
+	return render_template("index.html")
 
 
 @app.route('/lab')
 def browse_labs():
-	return open("browse_labs.html").read()
+	all_hws = get_all_of("lab")
+	hw_names = list(enumerate([i['name'] for i in all_hws]))
+	return render_template("browse_hws.html",hws=hw_names,file_type="Lab",file_verbose="Lab",type_hidden="lab")
 
 @app.route('/hw')
 def browse_hws():
-	all_hws = get_all_hws()
+	all_hws = get_all_of("hw")
 	hw_names = list(enumerate([i['name'] for i in all_hws]))
-	return render_template("browse_hws.html",hws=hw_names)
+	return render_template("browse_hws.html",hws=hw_names,file_type="HW",file_verbose="Homework Assignment",type_hidden="hw")
 
 @app.route('/settings')
 def settings():
@@ -137,6 +154,13 @@ def launch_preamble(path):
 	return redirect('/edit/hw/%d'%path)
 
 
+@app.route('/launch/lab/<int:path>')
+def launch_lab(path):
+	file_name = normpath('materials/labs/%d/lab.ipynb'%path)
+	launch(file_name)
+	return redirect('/edit/lab/%d'%path)
+
+
 def launch(full_path):
 	if not os.path.exists(full_path):
 		abort(404)
@@ -173,7 +197,7 @@ class Folder:
 	def get_description(self):
 		path_to_description = join(self.full_path(),'description.txt')
 		if not exists(path_to_description):
-			self.set_description("Generic Description AF")
+			self.set_description("Generic Description Here")
 		with open(path_to_description) as f:
 			return f.read()
 
@@ -250,64 +274,169 @@ def update_description(path):
 def to_full_path(yo):
 	return join(os.getcwd(),'materials','questions',normpath(yo))
 
+
 @app.route('/edit/hw/<int:hw_num>')
 def edit_hw(hw_num):
-	if not hw_exists(hw_num):
+	show_mode = request.args.get('show','master')
+	if show_mode not in translaters:
+		abort(404)
+
+	if not exists_of("hw",hw_num):
 		abort(404)
 
 	if notebook_monitor:
 		notebook_monitor.refresh()
 
-	info = get_hw_info(hw_num)
+	info = get_info("hw",hw_num)
 	title = info['name']
 	nb_names = info['order']
 
 	all_notebooks = notebook_monitor.get_viewable_files()
 	all_other_notebooks = [i for i in all_notebooks if i[0] not in nb_names]
 	all_current_notebooks = [i for i in all_notebooks if i[0] in nb_names]
-	print(all_current_notebooks)
+	all_current_notebooks.sort(key=lambda x: nb_names.index(x[0]))
+	print("ALL CURRENT NOTEOOKS" ,all_current_notebooks)
 
 	base_nb_location = join(os.getcwd(),'materials','hw',str(hw_num),'preamble.ipynb')
 	base_nb = pN.load_notebook(base_nb_location)
 
 	nbs = [pN.load_notebook(to_full_path(nb_name)) for nb_name,last_updated in all_current_notebooks]
 	combined = pN.generate_combined(nbs,base=base_nb)
-	html = nb_to_html(combined)
+	new_nb = translaters[show_mode](combined)
+	html = nb_to_html(new_nb)
+	return render_template("edit_hw.html",title=title,notebook=html,nb_files=all_other_notebooks,curr_files=all_current_notebooks,hw_num=hw_num,status=show_mode.capitalize())
 
 
-	return render_template("edit_hw.html",title=title,notebook=html,nb_files=all_other_notebooks,curr_files=all_current_notebooks,hw_num=hw_num)
+@app.route('/edit/lab/<int:hw_num>')
+def edit_lab(hw_num):
+	show_mode = request.args.get('show','master')
+	if show_mode not in translaters:
+		abort(404)
 
-def get_all_hws():
+	if not exists_of("lab",hw_num):
+		abort(404)
+
+	info = get_info("lab",hw_num)
+	title = info['name']
+
+	base_nb_location = join(os.getcwd(),'materials','labs',str(hw_num),'lab.ipynb')
+	base_nb = pN.load_notebook(base_nb_location)
+	new_nb = translaters[show_mode](base_nb)
+	html = nb_to_html(new_nb)
+	return render_template("edit_lab.html",title=title,notebook=html,hw_num=hw_num,status=show_mode.capitalize())
+
+
+
+downloaders = ['student','solution']
+
+@app.route('/download/hw/<int:hw_num>')
+def download_hw(hw_num):
+	show_mode = request.args.get('show','student')
+	
+	if show_mode not in translaters:
+		abort(404)
+
+	if not exists_of("hw",hw_num):
+		abort(404)
+
+	if notebook_monitor:
+		notebook_monitor.refresh()
+
+	info = get_info("hw",hw_num)
+	title = info['name']
+	nb_names = info['order']
+
+	all_notebooks = notebook_monitor.get_viewable_files()
+	all_current_notebooks = [i for i in all_notebooks if i[0] in nb_names]
+	all_current_notebooks.sort(key=lambda x: nb_names.index(x[0]))
+
+	base_nb_location = join(os.getcwd(),'materials','hw',str(hw_num),'preamble.ipynb')
+	base_nb = pN.load_notebook(base_nb_location)
+	print(all_current_notebooks)
+
+	nbs = [pN.load_notebook(to_full_path(nb_name)) for nb_name,last_updated in all_current_notebooks]
+	combined = pN.generate_combined(nbs,base=base_nb)
+
+	if show_mode == 'student':
+		return download_student_notebook(combined,"hw%d"%hw_num)
+	
+	elif show_mode == 'solution':
+		return download_solution_notebook(combined,"hw%d_solution"%hw_num)
+	abort(404)
+
+
+@app.route('/download/lab/<int:hw_num>')
+def download_lab(hw_num):
+	show_mode = request.args.get('show','student')
+	
+	if show_mode not in translaters:
+		abort(404)
+
+	if not exists_of("lab",hw_num):
+		abort(404)
+
+	base_nb_location = join(os.getcwd(),'materials','labs',str(hw_num),'lab.ipynb')
+	base_nb = pN.load_notebook(base_nb_location)
+
+	if show_mode == 'student':
+		return download_student_notebook(base_nb,"lab%d"%hw_num)
+	
+	elif show_mode == 'solution':
+		return download_solution_notebook(base_nb,"lab%d_solution"%hw_num)
+	
+	abort(404)
+
+
+def download_student_notebook(notebook,name):
+	build_directory = join(os.getcwd(),'tmp','student')
+	shutil.rmtree(build_directory,ignore_errors=True)
+	shutil.copytree(join(os.getcwd(),'generators','student_export'),build_directory)
+	notebook = pN.generate_student(notebook,build_directory)
+	pN.save_notebook(notebook,join(build_directory,name))
+	pN.save_notebook(notebook,join(build_directory,'grading','base'))
+	shutil.make_archive(join(os.getcwd(),'tmp',name), 'zip',build_directory)
+	return send_file(join(os.getcwd(),'tmp','%s.zip'%name),as_attachment=True,attachment_filename="%s.zip"%name)
+
+
+def download_solution_notebook(notebook,name):
+	solutions = pN.generate_student(notebook)
+	pN.save_notebook(solutions,join(os.getcwd(),'tmp',name))
+	return send_file(join(os.getcwd(),'tmp','%s.ipynb'%name),as_attachment=True,attachment_filename="%s.ipynb"%name)
+
+
+
+start_directory = {"hw":join(os.getcwd(),'materials','hw'), "lab":join(os.getcwd(),'materials','labs')}
+
+def get_all_of(file_type):
 	i = 1
-	all_hws = []
-	while os.path.exists(os.path.join('materials','hw',str(i))):
-		all_hws.append(get_hw_info(i))
+	alls = []
+	while exists(join(start_directory[file_type],str(i))):
+		alls.append(get_info(file_type,i))
 		i += 1
-	return all_hws
+	return alls
 
-def how_many_hws():
+def how_many_of(file_type):
 	i = 0
-	while os.path.exists(os.path.join('materials','hw',str(i+1))):
+	while exists(join(start_directory[file_type],str(i))):
 		i+=1 
-	return i	
+	return i
 
-def hw_exists(i):
-	path_to_json = os.path.join('materials','hw',str(i),'info.json')
+def exists_of(file_type,i):
+	path_to_json = os.path.join(start_directory[file_type],str(i),'info.json')
 	return os.path.exists(path_to_json)
 
-def get_hw_info(i):
-	path_to_json = os.path.join('materials','hw',str(i),'info.json')
+def get_info(file_type,i):
+	path_to_json = os.path.join(start_directory[file_type],str(i),'info.json')
 	if os.path.exists(path_to_json):
 		return json.load(open(path_to_json))
 	return None
 
-def set_hw_info(i,name=None,order=None):
-	current = get_hw_info(i)
-	if name is not None:
-		current['name'] = name
-	if order is not None:
-		current['order'] = order
-	path_to_json = os.path.join('materials','hw',str(i),'info.json')
+
+def set_info(file_type,**kwargs):
+	current = get_info(file_type,i)
+	for k,v in kwargs.items():
+		current[k] = v
+	path_to_json = os.path.join(start_directory[file_type],str(i),'info.json')
 	json.dump(current, open(path_to_json,'w'))
 
 def create_new_hw(i,description="Generic Homework Assignment"):
@@ -321,6 +450,16 @@ def create_new_hw(i,description="Generic Homework Assignment"):
 	shutil.copyfile(os.path.join('generators','preamble.ipynb'),os.path.join(path_to_hw,'preamble.ipynb'))
 
 
+def create_new_lab(i,description="Generic Lab"):
+	path_to_lab = os.path.join(os.getcwd(),'materials','labs',str(i))
+	if os.path.exists(path_to_lab):
+		print("Already Exists")
+		return
+	os.makedirs(path_to_lab)
+	new_config = {'name':description}
+	json.dump(new_config,open(os.path.join(path_to_lab,'info.json'),'w'))	
+	shutil.copyfile(os.path.join('generators','question.ipynb'),os.path.join(path_to_lab,'lab.ipynb'))
+
 
 
 
@@ -328,7 +467,9 @@ def create_new_hw(i,description="Generic Homework Assignment"):
 def update_hw(hw_num):
 	if not hw_exists(hw_num):
 		abort(404)
+	print(request.form)
 	if 'order' in request.form:
+		print(json.loads(request.form['order']))
 		set_hw_info(hw_num, order=json.loads(request.form['order']))
 	if 'name' in request.form:
 		print(request.form['order'])
@@ -344,11 +485,16 @@ def new_item():
 	new_type = request.form['type']
 	if new_type == 'hw':
 		name = request.form.get('name','Generic Assignment')
-		num = how_many_hws() + 1
+		num = how_many_of("hw") + 1
 		create_new_hw(num,name)
 		return redirect('/edit/hw/%d'%num)
+
 	if new_type == 'lab':
-		pass
+		name = request.form.get('name','Generic Lab')
+		num = how_many_of("lab") + 1
+		create_new_hw(num,name)
+		return redirect('/edit/labs/%d'%num)
+
 	if new_type == 'category':
 		name = request.form.get('name','Generic Category')
 		path = request.form.get('path','')
@@ -357,6 +503,7 @@ def new_item():
 		if not os.path.exists(new_path):
 			os.makedirs(new_path)
 		return redirect('/questions/%s%s'%(path,name))
+
 	if new_type == 'question':
 		name = request.form.get('name','Generic Category')
 		path = request.form.get('path','')
@@ -365,7 +512,11 @@ def new_item():
 		if not os.path.exists(new_path):
 			shutil.copyfile(os.path.join('generators','question.ipynb'),new_path)
 		return redirect('/edit/questions/%s/%s'%(path,name+".ipynb"))
+
 	return 'Sorry! Looks like something messed up. Contact Dibya and we\'ll try to fix it'
+
+
+
 
 if __name__ == '__main__':
 	start_up_all()

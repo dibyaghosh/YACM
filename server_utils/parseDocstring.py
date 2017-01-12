@@ -1,7 +1,7 @@
 import sys
 import nbformat.notebooknode as nn
 import json
-
+from os.path import join
 
 isOK = lambda cell: '%%rundoctest' == cell['source'].split('\n')[0].strip().replace(' ', '')
 
@@ -51,24 +51,24 @@ def insertDoctests(dts):
 questionNum = 1
 allTests = []
 
-def generateOKTestFile(cell,builddirectory,to_file=False):
+def generateOKTestFile(cell,builddirectory='',to_file=False):
     global questionNum
     name = 'Question'
     points = 1
     doctest_list = insertDoctests(parseDoctest(cell['source']))
     doctests = ",".join(doctest_list)
     output = okTest%(name,points,doctests)
-    fname = "%s/tests/q%d.py"%(builddirectory,questionNum)
+    fname = join(builddirectory,'tests','q%d.py'%questionNum)
     if to_file:
         open(fname,"w").write(output)
     cell['source'] = "_ = autograder.grade('q%d')"%questionNum
     allTests.append({"score":1, "num":"q%d"%questionNum, "name":"Question %d"%questionNum})
     questionNum += 1
 
-def generateDoctests(notebook,builddirectory="",output=False):
+def generateDoctests(notebook,**kwargs):
     notebook.cells = [c for c in notebook.cells if 'import doctest' not in c['source']]
     cells = [c for c in notebook.cells if isOK(c)]
-    [generateOKTestFile(c,builddirectory,output) for c in cells]
+    [generateOKTestFile(c,**kwargs) for c in cells]
     notebook.cells.append(nn.NotebookNode(submissionCells[0]))
     notebook.cells.append(nn.NotebookNode(submissionCells[1]))
     testData = {"tests":allTests}
